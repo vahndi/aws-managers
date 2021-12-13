@@ -1,5 +1,7 @@
 from typing import List
 
+from boto3 import client
+
 from aws_managers.s3.s3_container_mixin import S3ContainerMixin
 from aws_managers.s3.utils import s3_bucket_uri
 
@@ -24,6 +26,7 @@ class S3FolderManager(
             ])
         self._folder_path: List[str] = folder_names
         self._name = folder_path[-1]
+        self._client = client('s3')
 
     def __truediv__(self, folder: str):
 
