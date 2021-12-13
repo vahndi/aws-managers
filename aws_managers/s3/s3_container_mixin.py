@@ -1,3 +1,5 @@
+from re import match
+
 from botocore.client import BaseClient
 from typing import List, Optional
 
@@ -34,16 +36,34 @@ class S3ContainerMixin(object):
                 objects.extend([obj for obj in response['Contents']])
         return objects
 
-    def object_keys(self) -> List[str]:
+    def _filter(self, strings: List[str], pattern: Optional[str]) -> List[str]:
+
+        if pattern is None:
+            return strings
+        else:
+            return [
+                string for string in strings
+                if match(pattern, string)
+            ]
+
+    def object_keys(
+            self,
+            pattern: Optional[str] = None
+    ) -> List[str]:
         """
-        Returns the value of 'Key' for each object (folder or file) in the
+        Returns the key of each object (folder or file) in the
         container.
         """
-        return [obj['Key'] for obj in self.list_objects()]
+        object_keys = [obj['Key'] for obj in self.list_objects()]
+        return self._filter(object_keys, pattern)
 
-    def folder_keys(self, deep: bool = False) -> List[str]:
+    def folder_keys(
+            self,
+            pattern: Optional[str] = None,
+            deep: bool = False
+    ) -> List[str]:
         """
-        Return the name of each folder in the container.
+        Return the key of each folder in the container.
         """
         if self.prefix is None:
             slashes = 0
@@ -54,18 +74,27 @@ class S3ContainerMixin(object):
             if object_key.endswith('/'):
                 if deep or object_key.count('/') == slashes + 1:
                     folder_keys.append(object_key)
-        return folder_keys
+        return self._filter(folder_keys, pattern)
 
-    def folder_uris(self, deep: bool = False) -> List[str]:
+    def folder_uris(
+            self,
+            pattern: Optional[str] = None,
+            deep: bool = False
+    ) -> List[str]:
         """
         Return the uri of each folder in the container.
         """
-        return [
+        folder_uris = [
             f'{self._bucket_uri}{folder_key}'
             for folder_key in self.folder_keys(deep=deep)
         ]
+        return self._filter(folder_uris, pattern)
 
-    def file_keys(self, deep: bool = False) -> List[str]:
+    def file_keys(
+            self,
+            pattern: Optional[str] = None,
+            deep: bool = False
+    ) -> List[str]:
         """
         Return the name of each file in the container.
         """
@@ -78,16 +107,21 @@ class S3ContainerMixin(object):
             if not object_key.endswith('/'):
                 if deep or object_key.count('/') == slashes:
                     file_keys.append(object_key)
-        return file_keys
+        return self._filter(file_keys, pattern)
 
-    def file_uris(self, deep: bool = False) -> List[str]:
+    def file_uris(
+            self,
+            pattern: Optional[str] = None,
+            deep: bool = False
+    ) -> List[str]:
         """
         Return the uri of each folder in the container.
         """
-        return [
+        file_uris = [
             f'{self._bucket_uri}{file_key}'
             for file_key in self.file_keys(deep=deep)
         ]
+        return self._filter(file_uris, pattern)
 
     def size(self) -> int:
         """

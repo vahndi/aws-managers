@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from boto3 import client
 
@@ -35,13 +35,17 @@ class S3BucketManager(
         """
         return self._bucket_uri
 
-    def folders(self, deep: bool = False) -> List[S3FolderManager]:
+    def folders(
+            self,
+            pattern: Optional[str] = None,
+            deep: bool = False
+    ) -> List[S3FolderManager]:
         """
-        Return an S3FolderManager reference to each sub-folder in the folder.
+        Return an S3FolderManager reference to each sub-folder in the bucket.
         """
         return [
             S3FolderManager(self._bucket_name, folder_key)
-            for folder_key in self.folder_keys(deep=deep)
+            for folder_key in self.folder_keys(pattern=pattern, deep=deep)
         ]
 
     def __truediv__(self, folder: str):
