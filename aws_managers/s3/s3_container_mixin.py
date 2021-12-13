@@ -54,7 +54,7 @@ class S3ContainerMixin(object):
         Return the uri of each folder in the container.
         """
         return [
-            f'{self._bucket_name}{folder_key}'
+            f'{self._bucket_uri}{folder_key}'
             for folder_key in self.folder_keys(deep=deep)
         ]
 
@@ -78,7 +78,7 @@ class S3ContainerMixin(object):
         Return the uri of each folder in the container.
         """
         return [
-            f'{self._bucket_name}{file_key}'
+            f'{self._bucket_uri}{file_key}'
             for file_key in self.file_keys(deep=deep)
         ]
 

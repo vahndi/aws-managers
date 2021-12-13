@@ -18,6 +18,7 @@ class S3FolderManager(
                 'Must provide at least one folder in the path'
             )
         self._bucket_name: str = bucket_name
+        self._bucket_uri = s3_bucket_uri(bucket_name)
         folder_names = []
         for component in folder_path:
             folder_names.extend([
@@ -65,7 +66,7 @@ class S3FolderManager(
         """
         Return the URI of the folder.
         """
-        return s3_bucket_uri(self._bucket_name) + (
+        return self._bucket_uri + (
             '/'.join(self._folder_path)
         ) + '/'
 
