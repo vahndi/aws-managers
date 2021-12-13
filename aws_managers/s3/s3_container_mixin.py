@@ -12,27 +12,34 @@ class S3ContainerMixin(object):
     uri: str
     _client: BaseClient
 
-    def list_object_keys(self) -> List[str]:
+    def list_objects(self) -> List[dict]:
         """
-        Returns the value of 'Key' for each item in the container.
+        Returns a list of dicts describing each object in the container.
 
         https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.list_objects_v2
         """
-        object_keys = []
+        objects = []
         kwargs = dict(Bucket=self._bucket_name)
         if self.prefix is not None:
             kwargs['Prefix'] = self.prefix
         response: dict = self._client.list_objects_v2(**kwargs)
         if 'Contents' in response.keys():
-            object_keys.extend([f['Key'] for f in response['Contents']])
+            objects.extend([obj for obj in response['Contents']])
             while response['IsTruncated'] is True:
                 continuation_token = response['NextContinuationToken']
                 response: dict = self._client.list_objects_v2(
                     ContinuationToken=continuation_token,
                     **kwargs
                 )
-                object_keys.extend([f['Key'] for f in response['Contents']])
-        return object_keys
+                objects.extend([obj for obj in response['Contents']])
+        return objects
+
+    def object_keys(self) -> List[str]:
+        """
+        Returns the value of 'Key' for each object (folder or file) in the
+        container.
+        """
+        return [obj['Key'] for obj in self.list_objects()]
 
     def folder_keys(self, deep: bool = False) -> List[str]:
         """
@@ -43,7 +50,7 @@ class S3ContainerMixin(object):
         else:
             slashes = self.prefix.count('/')
         folder_keys = []
-        for object_key in self.list_object_keys():
+        for object_key in self.object_keys():
             if object_key.endswith('/'):
                 if deep or object_key.count('/') == slashes + 1:
                     folder_keys.append(object_key)
@@ -67,7 +74,7 @@ class S3ContainerMixin(object):
         else:
             slashes = self.prefix.count('/')
         file_keys = []
-        for object_key in self.list_object_keys():
+        for object_key in self.object_keys():
             if not object_key.endswith('/'):
                 if deep or object_key.count('/') == slashes:
                     file_keys.append(object_key)
@@ -86,7 +93,7 @@ class S3ContainerMixin(object):
         """
         Return the size of the bucket and its contents, in bytes.
         """
-        raise NotImplementedError
+        return sum([obj['Size'] for obj in self.list_objects()])
 
     def __repr__(self):
 
