@@ -17,10 +17,15 @@ class S3BucketManager(
 
         :param name: Name of the bucket.
         """
-        self.name: str = name
+        self._bucket_name: str = name
         self._bucket_uri = s3_bucket_uri(name)
         self.prefix = None
         self._client = client('s3')
+
+    @property
+    def name(self) -> str:
+
+        return self._bucket_name
 
     @property
     def uri(self) -> str:
