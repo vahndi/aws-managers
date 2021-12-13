@@ -19,7 +19,7 @@ class S3BucketManager(
         """
         self._bucket_name: str = name
         self._bucket_uri = s3_bucket_uri(name)
-        self.prefix = ''
+        self.prefix = None
         self._client = client('s3')
 
     @property
