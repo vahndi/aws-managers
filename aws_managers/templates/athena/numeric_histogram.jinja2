@@ -1,0 +1,10 @@
+SELECT
+    value, count
+FROM (
+    SELECT
+        numeric_histogram({{ buckets }}, {{ column }})
+    FROM
+         {{ database }}.{{ table }}
+) AS x ({{ column }}_histogram)
+CROSS JOIN
+    UNNEST({{ column }}_histogram) AS t (value, count);

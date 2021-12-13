@@ -1,0 +1,11 @@
+name: aws-managers
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - jinja2
+  - boto3
+  - pandas
+  - sagemaker-python-sdk
+  - tqdm
+prefix: /opt/miniconda3/envs/aws-managers

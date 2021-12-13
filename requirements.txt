@@ -1,0 +1,6 @@
+botocore
+boto3
+jinja2
+pandas
+sagemaker
+tqdm

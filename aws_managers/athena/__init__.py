@@ -1,0 +1,2 @@
+from aws_managers.athena.athena_table_manager import AthenaTableManager
+from aws_managers.athena.athena_query_generator import AthenaQueryGenerator

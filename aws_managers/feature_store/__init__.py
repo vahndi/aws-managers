@@ -1,0 +1,3 @@
+from aws_managers.feature_store.feature_group_manager import FeatureGroupManager
+from aws_managers.feature_store.features_metadata import FeaturesMetadata
+from aws_managers.feature_store.utils import make_feature_group
