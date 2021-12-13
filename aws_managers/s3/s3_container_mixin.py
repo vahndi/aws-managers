@@ -17,8 +17,9 @@ class S3ContainerMixin(object):
 
         https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html#S3.Client.list_objects_v2
         """
-        response = self._client.list_objects_v2(
-            Bucket=self._bucket_name,
-            Prefix=self.prefix
-        )
+        kwargs = dict(Bucket=self._bucket_name)
+        prefix = self.prefix
+        if prefix is not None:
+            kwargs['Prefix'] = prefix
+        response = self._client.list_objects_v2(**kwargs)
         return [f['Key'] for f in response['Contents']]
