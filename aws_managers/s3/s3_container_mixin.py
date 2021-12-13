@@ -24,7 +24,7 @@ class S3ContainerMixin(object):
         response: dict = self._client.list_objects_v2(**kwargs)
         if 'Contents' in response.keys():
             object_keys.extend([f['Key'] for f in response['Contents']])
-            while 'IsTruncated' in response.keys():
+            while response['IsTruncated'] is True:
                 continuation_token = response['NextContinuationToken']
                 response: dict = self._client.list_objects_v2(
                     ContinuationToken=continuation_token,
