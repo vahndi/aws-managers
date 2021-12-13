@@ -68,3 +68,12 @@ class S3FolderManager(
         return s3_bucket_uri(self._bucket_name) + (
             '/'.join(self._folder_path)
         ) + '/'
+
+    def folders(self, deep: bool = False) -> List['S3FolderManager']:
+        """
+        Return an S3FolderManager reference to each sub-folder in the folder.
+        """
+        return [
+            S3FolderManager(self._bucket_name, folder_key)
+            for folder_key in self.folder_keys(deep=deep)
+        ]
