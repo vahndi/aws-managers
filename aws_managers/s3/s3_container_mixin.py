@@ -37,7 +37,10 @@ class S3ContainerMixin(object):
         """
         Return the name of each folder in the container.
         """
-        slashes = self.prefix.count('/')
+        if self.prefix is None:
+            slashes = 0
+        else:
+            slashes = self.prefix.count('/')
         folder_uris = []
         for object_key in self.list_object_keys():
             if object_key.endswith('/'):
@@ -49,7 +52,10 @@ class S3ContainerMixin(object):
         """
         Return the name of each file in the container.
         """
-        slashes = self.prefix.count('/')
+        if self.prefix is None:
+            slashes = 0
+        else:
+            slashes = self.prefix.count('/')
         file_uris = []
         for object_key in self.list_object_keys():
             if not object_key.endswith('/'):
