@@ -36,7 +36,8 @@ class S3ContainerMixin(object):
                 objects.extend([obj for obj in response['Contents']])
         return objects
 
-    def _filter(self, strings: List[str], pattern: Optional[str]) -> List[str]:
+    @staticmethod
+    def _filter(strings: List[str], pattern: Optional[str]) -> List[str]:
 
         if pattern is None:
             return strings

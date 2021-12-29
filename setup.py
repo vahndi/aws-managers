@@ -5,7 +5,7 @@ from setuptools import find_packages
 setup(
     name='aws-managers',
     packages=find_packages(),
-    version='0.014',
+    version='0.015',
     license='MIT',
     description='Wrappers around boto3 and sagemaker',
     author='Vahndi Minah',
@@ -15,6 +15,7 @@ setup(
         'botocore',
         'boto3',
         'jinja2',
+        'numpy',
         'pandas',
         'sagemaker',
         'tqdm'

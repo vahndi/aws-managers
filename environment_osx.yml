@@ -8,4 +8,5 @@ dependencies:
   - pandas
   - sagemaker-python-sdk
   - tqdm
+  - ipython
 prefix: /opt/miniconda3/envs/aws-managers
