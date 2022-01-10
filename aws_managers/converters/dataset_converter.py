@@ -233,7 +233,7 @@ class DatasetConverter(object):
             expected_values = set(
                 category_value_rows[self.old_value].fillna(sentinel).unique()
             )
-            if column[self.nulls] is True and sentinel not in expected_values:
+            if column[self.nulls] == True and sentinel not in expected_values:
                 expected_values.add(sentinel)
             actual_values = set(
                 data.loc[:, old_name].fillna(sentinel).unique()
