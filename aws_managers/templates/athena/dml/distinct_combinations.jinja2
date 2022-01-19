@@ -1,0 +1,18 @@
+SELECT
+{%- for column in columns %}
+    distinct_arrays.field{{ loop.index0 }} as {{ column }}{{ ',' if not loop.last else '' }}
+{%- endfor %}
+FROM (
+    SELECT
+        DISTINCT(
+{%- for column in columns %}
+            {{ column }}{{ ',' if not loop.last else '' }}
+{%- endfor %}
+        ) as distinct_arrays
+    FROM
+        "{{ database }}"."{{ table }}"
+{%- if where is not none %}
+    WHERE {{ where | replace('\n', '\n    ')}}
+{%- endif %}
+)
+;

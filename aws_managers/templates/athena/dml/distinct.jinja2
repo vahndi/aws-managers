@@ -1,0 +1,8 @@
+SELECT
+    DISTINCT({{ column }})
+FROM
+    {{ database }}.{{ table }}
+{%- if where is not none %}
+WHERE {{ where }}
+{%- endif %}
+;

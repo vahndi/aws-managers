@@ -1,0 +1,18 @@
+CREATE EXTERNAL TABLE IF NOT EXISTS `{{ database }}`.`{{ table }}` (
+{%- for k, v in columns.items() %}
+  `{{ k }}` {{ v }}{{ ',' if not loop.last else '' }}
+{%- endfor %}
+)
+{%- if partition_columns is not none %}
+PARTITIONED BY (
+{%- for k, v in partition_columns.items() %}
+  `{{ k }}` {{ v }}{{ ',' if not loop.last else '' }}
+{%- endfor %}
+)
+{%- endif %}
+ROW FORMAT SERDE '{{ row_format }}'
+WITH SERDEPROPERTIES (
+  'serialization.format' = '{{ serialization_format }}'
+)
+LOCATION '{{ location}}'
+TBLPROPERTIES ('has_encrypted_data'='{{ encrypted }}');
