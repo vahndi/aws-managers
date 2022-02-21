@@ -320,6 +320,11 @@ class DatasetConverter(object):
             old_name: str = column[self.old_name]
             category: str = column[self.category]
             d_type: str = column[self.d_type]
+            # TODO: add a check to see if the column has a category.
+            # columns could have a category and not be a categorical e.g. Yes/No -> bool
+            # if has category
+            #   replace category values
+            # convert dtype as below
             if d_type == 'int':
                 if column[self.nulls] == True:
                     data[old_name] = data[old_name].astype(float)
@@ -329,6 +334,7 @@ class DatasetConverter(object):
                 category_value_rows = self.categories.loc[
                     self.categories[self.category] == category
                 ]
+                # what is going on here???
                 if category_value_rows[self.new_value].notnull().sum() > 0:
                     category_values = category_value_rows[
                         self.new_value
@@ -366,6 +372,7 @@ class DatasetConverter(object):
                 self.new_name
             ].to_dict()
         )
+        data = data[self.columns[self.new_name]]
         return data
 
     def convert_data(self, data: DataFrame, copy: bool = False) -> DataFrame:
