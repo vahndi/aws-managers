@@ -1,3 +1,4 @@
+awswrangler
 botocore
 boto3
 jinja2

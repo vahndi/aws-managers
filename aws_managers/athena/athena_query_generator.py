@@ -5,19 +5,12 @@ from jinja2 import Environment, FileSystemLoader
 from aws_managers.athena.athena_ser_des import AthenaSerDes
 from aws_managers.athena.clauses.conjunctive_operators import \
     ConjunctiveOperator
-from aws_managers.athena.operators.comparisons import ComparisonMixin
+from aws_managers.athena.columns import Column
+from aws_managers.athena.operators.mixins import ComparisonMixin
 from aws_managers.paths.dirs import DIR_ATHENA_TEMPLATES
 
 
 class AthenaQueryGenerator(object):
-
-    SER_DES = {
-        'parquet': 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe',
-
-    }
-    PARQUET_HIVE_SERDE = (
-        'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
-    )
 
     def __init__(self):
 
@@ -65,7 +58,8 @@ class AthenaQueryGenerator(object):
     ) -> str:
         """
         Run this query right after creating the table, if the S3 data is
-        partitioned.
+        partitioned. This is the equivalent of selecting "Load partitions" from
+        the related table dropdown in the Athena Tables list.
 
         :param database: Name of the database.
         :param table: Name of the table.
@@ -73,11 +67,33 @@ class AthenaQueryGenerator(object):
         t = self.env.get_template('ddl/repair_table.jinja2')
         return t.render(database=database, table=table)
 
+    def column_info(
+            self,
+            database: str,
+            table: str
+    ) -> str:
+        """
+        Get info on the table schema.
+
+        https://docs.aws.amazon.com/athena/latest/ug/querying-glue-catalog.html#querying-glue-catalog-listing-columns
+
+        ['table_catalog', 'table_schema', 'table_name', 'column_name',
+       'ordinal_position', 'column_default', 'is_nullable', 'data_type',
+       'comment', 'extra_info']
+
+        :param database: Name of the database.
+        :param table: Name of the table.
+        """
+        t = self.env.get_template('ddl/column_info.jinja2')
+        return t.render(database=database, table=table)
+
     def distinct(
             self,
-            column: str,
-            database: str, table: str,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            column: Union[str, Column],
+            database: str,
+            table: str,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            order_by: Optional[Union[Column, str, bool]] = True
     ) -> str:
         """
         Select distinct values from a column.
@@ -86,17 +102,50 @@ class AthenaQueryGenerator(object):
         :param database: Name of the database.
         :param table: Name of the table.
         :param where: Optional conditions to filter on.
+        :param order_by: Name of column to order by, True to order by distinct
+                         column or False to not specify order.
         """
         t = self.env.get_template('dml/distinct.jinja2')
+        if order_by is True:
+            order_by = column
+        elif order_by is False:
+            order_by = None
         return t.render(
             database=database,
-            table=table, column=column,
+            table=table,
+            column=column,
+            where=where,
+            order_by=order_by
+        )
+
+    def count_distinct(
+            self,
+            columns: Union[str, Column, List[Union[str, Column]]],
+            database: str,
+            table: str,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+    ) -> str:
+        """
+        Count the number of distinct values in each column.
+
+        :param columns: Name(s) of columns(s) to count distinct values of.
+        :param database: Name of the database.
+        :param table: Name of the table.
+        :param where: Optional conditions to filter on.
+        """
+        if isinstance(columns, str) or isinstance(columns, Column):
+            columns = [columns]
+        t = self.env.get_template('dml/count_distinct.jinja2')
+        return t.render(
+            database=database,
+            table=table,
+            columns=columns,
             where=where
         )
 
     def distinct_combinations(
             self,
-            columns: List[str],
+            columns: List[Union[str, Column]],
             database: str,
             table: str,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
@@ -112,15 +161,17 @@ class AthenaQueryGenerator(object):
         t = self.env.get_template('dml/distinct_combinations.jinja2')
         return t.render(
             database=database,
-            table=table, columns=columns,
+            table=table,
+            columns=columns,
             where=where
         )
 
     def histogram(
             self,
-            column: str,
+            column: Union[str, Column],
             database: str,
-            table: str
+            table: str,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
     ) -> str:
         """
         Returns a map containing the count of the number of times each input
@@ -131,19 +182,23 @@ class AthenaQueryGenerator(object):
         :param column: Name of the column to find a histogram of.
         :param database: Name of the database.
         :param table: Name of the table.
+        :param where: Optional conditions to filter on.
         """
         t = self.env.get_template('dml/histogram.jinja2')
         return t.render(
             database=database,
-            table=table, column=column
+            table=table,
+            column=column,
+            where=where
         )
 
     def numeric_histogram(
             self,
-            column: str,
+            column: Union[str, Column],
             buckets: int,
             database: str,
-            table: str
+            table: str,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
     ):
         """
         Computes an approximate histogram with up to buckets number of buckets
@@ -158,10 +213,13 @@ class AthenaQueryGenerator(object):
         :param buckets: Number of buckets to create.
         :param database: Name of the database.
         :param table: Name of the table.
+        :param where: Optional conditions to filter on.
         """
         t = self.env.get_template('dml/numeric_histogram.jinja2')
         return t.render(
             database=database,
-            table=table, column=column,
-            buckets=buckets
+            table=table,
+            column=column,
+            buckets=buckets,
+            where=where
         )

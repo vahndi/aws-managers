@@ -1,0 +1,8 @@
+SELECT
+    *
+FROM
+    information_schema.columns
+WHERE
+    table_schema = '{{ database }}' AND
+    table_name = '{{ table }}'
+;

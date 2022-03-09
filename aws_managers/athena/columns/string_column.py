@@ -2,7 +2,9 @@ from aws_managers.athena.columns.column import Column
 from aws_managers.athena.operators.comparisons import StringComparison
 
 
-class StringColumn(Column):
+class StringColumn(
+    Column
+):
 
     def __eq__(self, other: int) -> StringComparison:
         return StringComparison(self.name, '=', other)

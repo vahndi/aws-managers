@@ -5,6 +5,9 @@ FROM (
         histogram({{ column }})
     FROM
          {{ database }}.{{ table }}
+{%- if where is not none %}
+    WHERE {{ where | replace('\n', '\n    ')}}
+{%- endif %}
 ) AS x ({{ column }}_histogram)
 CROSS JOIN
     UNNEST({{ column }}_histogram) AS t (value, count);

@@ -1,8 +1,13 @@
 from aws_managers.athena.columns.column import Column
+from aws_managers.athena.functions.aggregate import MaxMixin, MinMixin
 from aws_managers.athena.operators.comparisons import TimestampComparison
 
 
-class TimestampColumn(Column):
+class TimestampColumn(
+    MaxMixin,
+    MinMixin,
+    Column
+):
 
     @staticmethod
     def value(year: int, month: int, day: int,

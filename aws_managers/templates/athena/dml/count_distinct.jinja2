@@ -1,0 +1,10 @@
+SELECT
+{%- for column in columns %}
+    COUNT(DISTINCT {{ column }}) AS {{ column }}{{ ',' if not loop.last else '' }}
+{%- endfor %}
+FROM
+    {{ database }}.{{ table }}
+{%- if where is not none %}
+WHERE {{ where }}
+{%- endif %}
+;

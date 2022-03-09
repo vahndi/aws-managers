@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from aws_managers.athena.operators.comparisons import ComparisonMixin
+from aws_managers.athena.operators.mixins import ComparisonMixin
 
 
 class ConjunctiveOperator(object):

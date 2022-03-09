@@ -1,8 +1,12 @@
 SELECT
-    DISTINCT({{ column }})
+    DISTINCT({{ column }}) as {{ column }}
 FROM
     {{ database }}.{{ table }}
 {%- if where is not none %}
 WHERE {{ where }}
 {%- endif %}
+{%- if order_by is not none %}
+ORDER BY
+    {{ order_by }}
+{%- endif  %}
 ;
