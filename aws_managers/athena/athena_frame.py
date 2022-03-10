@@ -215,9 +215,10 @@ class AthenaFrame(object):
             return AthenaSeries(
                 database=self._database,
                 table=self._table,
+                column=item,
                 column_info=self._column_info.loc[
                     self._column_info['column_name'] == item
-                ].iloc[0]
+                ].iloc[0],
             )
         else:
             return AthenaFrame(
