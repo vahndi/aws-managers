@@ -5,7 +5,10 @@ from setuptools import find_packages
 setup(
     name='aws-managers',
     packages=find_packages(),
-    version='0.017',
+    package_data={
+        '': ['*.jinja2']
+    },
+    version='0.018',
     license='MIT',
     description='Wrappers around boto3 and sagemaker',
     author='Vahndi Minah',
