@@ -55,3 +55,14 @@ class AthenaFrame(object):
         Return the dtypes in the table.
         """
         return self._column_info.set_index('column_name')['data_type']
+
+    def n_unique(self):
+        """
+        Count number of distinct elements.
+        """
+        data = self._execute(self._q.count_distinct(
+            columns=self.columns.to_list(),
+            database=self._database,
+            table=self._table
+        ))
+        return data.iloc[0]
