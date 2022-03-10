@@ -14,19 +14,19 @@ class IntColumn(
 ):
 
     def __eq__(self, other: int) -> ScalarComparison:
-        return ScalarComparison(self.name, '=', other)
+        return ScalarComparison(str(self), '=', other)
 
     def __ne__(self, other):
-        return ScalarComparison(self.name, '<>', other)
+        return ScalarComparison(str(self), '<>', other)
 
     def __lt__(self, other: int) -> ScalarComparison:
-        return ScalarComparison(self.name, '<', other)
+        return ScalarComparison(str(self), '<', other)
 
     def __gt__(self, other: int) -> ScalarComparison:
-        return ScalarComparison(self.name, '>', other)
+        return ScalarComparison(str(self), '>', other)
 
     def __le__(self, other: int) -> ScalarComparison:
-        return ScalarComparison(self.name, '<=', other)
+        return ScalarComparison(str(self), '<=', other)
 
     def __ge__(self, other: int) -> ScalarComparison:
-        return ScalarComparison(self.name, '>=', other)
+        return ScalarComparison(str(self), '>=', other)

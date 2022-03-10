@@ -87,6 +87,34 @@ class AthenaQueryGenerator(object):
         t = self.env.get_template('ddl/column_info.jinja2')
         return t.render(database=database, table=table)
 
+    def aggregate(
+            self,
+            agg_name: str,
+            columns: Union[str, Column, List[Union[str, Column]]],
+            database: str,
+            table: str,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+    ):
+        """
+        Aggregate each column using the given function e.g. mean, max, min.
+
+        :param agg_name: Name of the aggregate function to apply to each column.
+        :param columns: Column or columns to take the aggregate of.
+        :param database: Name of the database.
+        :param table: Name of the table.
+        :param where: Optional conditions to filter on.
+        """
+        if isinstance(columns, str) or isinstance(columns, Column):
+            columns = [columns]
+        t = self.env.get_template('dml/aggregate.jinja2')
+        return t.render(
+            agg_name=agg_name,
+            database=database,
+            table=table,
+            columns=columns,
+            where=where
+        )
+
     def distinct(
             self,
             column: Union[str, Column],

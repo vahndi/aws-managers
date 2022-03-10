@@ -10,7 +10,7 @@ setup(
                          './templates/athena/dml/*.jinja2']
     },
     include_package_data=False,
-    version='0.021',
+    version='0.022',
     license='MIT',
     description='Wrappers around boto3 and sagemaker',
     author='Vahndi Minah',
