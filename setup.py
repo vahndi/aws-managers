@@ -5,11 +5,12 @@ from setuptools import find_packages
 setup(
     name='aws-managers',
     packages=find_packages(),
-    data_files=[
-        ('athena_templates', ['templates/athena/ddl/*.jinja2',
-                              'templates/athena/dml/*.jinja2'])
-    ],
-    version='0.019',
+    package_data={
+        'aws_managers': ['./templates/athena/ddl/*.jinja2',
+                         './templates/athena/dml/*.jinja2']
+    },
+    include_package_data=False,
+    version='0.020',
     license='MIT',
     description='Wrappers around boto3 and sagemaker',
     author='Vahndi Minah',
