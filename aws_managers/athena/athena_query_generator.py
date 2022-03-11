@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List, Union
+from typing import Dict, Optional, List, Union, Tuple
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -93,6 +93,7 @@ class AthenaQueryGenerator(object):
             columns: Union[str, Column, List[Union[str, Column]]],
             database: str,
             table: str,
+            sample: Optional[Tuple[str, int]] = None,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
     ):
         """
@@ -102,6 +103,8 @@ class AthenaQueryGenerator(object):
         :param columns: Column or columns to take the aggregate of.
         :param database: Name of the database.
         :param table: Name of the table.
+        :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
+                       integer percentage.
         :param where: Optional conditions to filter on.
         """
         if isinstance(columns, str) or isinstance(columns, Column):
@@ -111,6 +114,37 @@ class AthenaQueryGenerator(object):
             agg_name=agg_name,
             database=database,
             table=table,
+            sample=sample,
+            columns=columns,
+            where=where
+        )
+
+    def count_distinct(
+            self,
+            columns: Union[str, Column, List[Union[str, Column]]],
+            database: str,
+            table: str,
+            sample: Optional[Tuple[str, int]] = None,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+    ) -> str:
+        """
+        Count the number of distinct values in each column.
+
+        :param columns: Name(s) of columns(s) to count distinct values of.
+        :param database: Name of the database.
+        :param table: Name of the table.
+        :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
+                       integer percentage.
+        sample: Optional[Tuple[str, int]] = None,
+        :param where: Optional conditions to filter on.
+        """
+        if isinstance(columns, str) or isinstance(columns, Column):
+            columns = [columns]
+        t = self.env.get_template('dml/count_distinct.jinja2')
+        return t.render(
+            database=database,
+            table=table,
+            sample=sample,
             columns=columns,
             where=where
         )
@@ -120,6 +154,7 @@ class AthenaQueryGenerator(object):
             column: Union[str, Column],
             database: str,
             table: str,
+            sample: Optional[Tuple[str, int]] = None,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
             order_by: Optional[Union[Column, str, bool]] = True
     ) -> str:
@@ -129,6 +164,8 @@ class AthenaQueryGenerator(object):
         :param column: Name of the column to find a histogram of.
         :param database: Name of the database.
         :param table: Name of the table.
+        :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
+               integer percentage.
         :param where: Optional conditions to filter on.
         :param order_by: Name of column to order by, True to order by distinct
                          column or False to not specify order.
@@ -141,34 +178,10 @@ class AthenaQueryGenerator(object):
         return t.render(
             database=database,
             table=table,
+            sample=sample,
             column=column,
             where=where,
             order_by=order_by
-        )
-
-    def count_distinct(
-            self,
-            columns: Union[str, Column, List[Union[str, Column]]],
-            database: str,
-            table: str,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
-    ) -> str:
-        """
-        Count the number of distinct values in each column.
-
-        :param columns: Name(s) of columns(s) to count distinct values of.
-        :param database: Name of the database.
-        :param table: Name of the table.
-        :param where: Optional conditions to filter on.
-        """
-        if isinstance(columns, str) or isinstance(columns, Column):
-            columns = [columns]
-        t = self.env.get_template('dml/count_distinct.jinja2')
-        return t.render(
-            database=database,
-            table=table,
-            columns=columns,
-            where=where
         )
 
     def distinct_combinations(

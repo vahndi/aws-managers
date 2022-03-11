@@ -1,9 +1,12 @@
-from typing import Optional
+from typing import Optional, Tuple, Union
 
 from awswrangler.athena import read_sql_query
 from pandas import Series, DataFrame
 
 from aws_managers.athena.athena_query_generator import AthenaQueryGenerator
+from aws_managers.athena.clauses.conjunctive_operators import \
+    ConjunctiveOperator
+from aws_managers.athena.operators.mixins import ComparisonMixin
 
 
 class AthenaSeries(object):
@@ -13,7 +16,9 @@ class AthenaSeries(object):
             database: str,
             table: str,
             column: str,
-            column_info: Optional[Series] = None
+            sample: Optional[Tuple[str, int]] = None,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            column_info: Optional[Series] = None,
     ):
         """
         Create a new AthenaFrame.
@@ -21,6 +26,8 @@ class AthenaSeries(object):
         :param database: Name of the Athena database.
         :param table: Name of the Athena table.
         :param column: Name of the column.
+        :param sample: Optional tuple of 'BERNOULLI' or 'SYSTEM' and an
+                       integer percentage.
         :param column_info: Column info from schema if this is a subset of an
                             existing frame. Leave as None for a new Series.
         """
@@ -38,6 +45,8 @@ class AthenaSeries(object):
             self._column_info: Series = column_info.loc[
                 column_info['column_name'] == self._column
             ].iloc[0]
+        self._sample: Optional[Tuple[str, int]] = sample
+        self._where = where
 
     def _execute(self, sql: str) -> DataFrame:
         """

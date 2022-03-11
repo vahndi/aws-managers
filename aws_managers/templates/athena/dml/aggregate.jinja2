@@ -4,6 +4,10 @@ SELECT
 {%- endfor %}
 FROM
     {{ database }}.{{ table }}
+{%- if sample is not none %}
+TABLESAMPLE
+    {{ sample[0] }} ({{ sample[1] }})
+{%- endif %}
 {%- if where is not none %}
 WHERE {{ where }}
 {%- endif %}

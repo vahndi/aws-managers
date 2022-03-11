@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple
 
 from awswrangler.athena import read_sql_query
 from pandas import DataFrame, Index, Series
@@ -8,6 +8,9 @@ from aws_managers.athena.athena_data_types import ATHENA_BOOLEAN_TYPES, \
     ATHENA_CHARACTER_TYPES, ATHENA_NUMERIC_TYPES
 from aws_managers.athena.athena_query_generator import AthenaQueryGenerator
 from aws_managers.athena.athena_series import AthenaSeries
+from aws_managers.athena.clauses.conjunctive_operators import \
+    ConjunctiveOperator
+from aws_managers.athena.operators.mixins import ComparisonMixin
 
 
 class AthenaFrame(object):
@@ -16,6 +19,8 @@ class AthenaFrame(object):
             self,
             database: str,
             table: str,
+            sample: Optional[Tuple[str, int]] = None,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
             column_info: Optional[DataFrame] = None
     ):
         """
@@ -25,6 +30,9 @@ class AthenaFrame(object):
         :param table: Name of the Athena table.
         :param column_info: Column info from schema if this is a subset of an
                             existing frame. Leave as None for a new Frame.
+        :param sample: Optional tuple of 'BERNOULLI' or 'SYSTEM' and an
+                       integer percentage.
+        :param where: Values for WHERE clause.
         """
         self._q: AthenaQueryGenerator = AthenaQueryGenerator()
         self._database: str = database
@@ -36,7 +44,8 @@ class AthenaFrame(object):
                 sql=self._q.column_info(
                     database=self._database, table=self._table)
             )
-        self._where = None
+        self._sample: Optional[Tuple[str, int]] = sample
+        self._where = where
 
     def _execute(self, sql: str) -> DataFrame:
         """
@@ -60,6 +69,34 @@ class AthenaFrame(object):
         Return the data-types in the table.
         """
         return self._column_info.set_index('column_name')['data_type']
+
+    # region sampling
+
+    def bernoulli_sample(self, percentage: int) -> 'AthenaFrame':
+        """
+        Do sampling from the Frame using the Bernoulli method.
+        """
+        return AthenaFrame(
+            database=self._database,
+            table=self._table,
+            sample=('BERNOULLI', percentage),
+            where=self._where,
+            column_info=self._column_info,
+        )
+
+    def system_sample(self, percentage: int) -> 'AthenaFrame':
+        """
+        Do sampling from the Frame using the System method.
+        """
+        return AthenaFrame(
+            database=self._database,
+            table=self._table,
+            sample=('SYSTEM', percentage),
+            where=self._where,
+            column_info=self._column_info
+        )
+
+    # endregion
 
     # region select data-types
 
@@ -93,7 +130,10 @@ class AthenaFrame(object):
                 ~self._column_info.isin(exclude)
             ]
         return AthenaFrame(
-            database=self._database, table=self._table,
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where,
             column_info=column_info
         )
 
@@ -113,7 +153,7 @@ class AthenaFrame(object):
         """
         Return a Frame with only the boolean and binary data types.
         """
-        return self.select_data_types(ATHENA_BOOLEAN_TYPES)
+        return self.select_data_types(include=ATHENA_BOOLEAN_TYPES)
 
     def select_datetime_types(self) -> 'AthenaFrame':
         """
@@ -142,7 +182,7 @@ class AthenaFrame(object):
 
     # endregion
 
-    def n_unique(self) -> Series:
+    def count_distinct(self) -> Series:
         """
         Count number of distinct elements.
         """
@@ -150,6 +190,7 @@ class AthenaFrame(object):
             columns=self.columns.to_list(),
             database=self._database,
             table=self._table,
+            sample=self._sample,
             where=self._where
         ))
         return data.iloc[0]
@@ -167,6 +208,7 @@ class AthenaFrame(object):
             columns=self.columns.to_list(),
             database=self._database,
             table=self._table,
+            sample=self._sample,
             where=self._where
         ))
         return data.iloc[0]
@@ -210,12 +252,18 @@ class AthenaFrame(object):
     # endregion
 
     def __getitem__(self, item: Union[str, List[str]]):
+        """
+        Select a column or subset of columns.
 
+        :param item: Name(s) of the column or columns to select.
+        """
         if isinstance(item, str):
             return AthenaSeries(
                 database=self._database,
                 table=self._table,
                 column=item,
+                sample=self._sample,
+                where=self._where,
                 column_info=self._column_info.loc[
                     self._column_info['column_name'] == item
                 ].iloc[0],
@@ -224,6 +272,8 @@ class AthenaFrame(object):
             return AthenaFrame(
                 database=self._database,
                 table=self._table,
+                sample=self._sample,
+                where=self._where,
                 column_info=self._column_info.loc[
                     self._column_info['column_name'].isin(item)
                 ]
