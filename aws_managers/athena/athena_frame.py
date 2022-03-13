@@ -260,7 +260,7 @@ class AthenaFrame(object):
     def _agg_by_group(
             self,
             agg_name: str,
-            sum_columns: Union[str, List[str]],
+            agg_columns: Union[str, List[str]],
             group_columns: Union[str, List[str]]
     ):
         """
@@ -270,19 +270,19 @@ class AthenaFrame(object):
         Returns a Series if there is only one sum column, otherwise a DataFrame.
 
         :param agg_name: Name of aggregation function.
-        :param sum_columns: Columns to sum.
+        :param agg_columns: Columns to sum.
         :param group_columns: Columns to group by.
         """
         data = self._execute(sql=self._q.aggregate_by_group(
             agg_name=agg_name,
-            agg_columns=sum_columns,
+            agg_columns=agg_columns,
             group_columns=group_columns,
             database=self._database,
             table=self._table,
             sample=self._sample,
             where=self._where
         ))
-        return data.set_index(group_columns)[sum_columns]
+        return data.set_index(group_columns)[agg_columns]
 
     def sum_by_group(
             self,
@@ -299,7 +299,64 @@ class AthenaFrame(object):
         """
         return self._agg_by_group(
             agg_name='sum',
-            sum_columns=sum_columns, group_columns=group_columns
+            agg_columns=sum_columns, group_columns=group_columns
+        )
+
+    def min_by_group(
+            self,
+            min_columns: Union[str, List[str]],
+            group_columns: Union[str, List[str]]
+    ) -> Union[DataFrame, Series]:
+        """
+        Take min of one or more columns over grouping of one or more other
+        columns.
+
+        Returns a Series if there is only one min column, otherwise a DataFrame.
+
+        :param min_columns: Columns to min.
+        :param group_columns: Columns to group by.
+        """
+        return self._agg_by_group(
+            agg_name='min',
+            agg_columns=min_columns, group_columns=group_columns
+        )
+
+    def max_by_group(
+            self,
+            max_columns: Union[str, List[str]],
+            group_columns: Union[str, List[str]]
+    ) -> Union[DataFrame, Series]:
+        """
+        Take max of one or more columns over grouping of one or more other
+        columns.
+
+        Returns a Series if there is only one max column, otherwise a DataFrame.
+
+        :param max_columns: Columns to max.
+        :param group_columns: Columns to group by.
+        """
+        return self._agg_by_group(
+            agg_name='max',
+            agg_columns=max_columns, group_columns=group_columns
+        )
+    
+    def mean_by_group(
+            self,
+            mean_columns: Union[str, List[str]],
+            group_columns: Union[str, List[str]]
+    ) -> Union[DataFrame, Series]:
+        """
+        Take mean of one or more columns over grouping of one or more other
+        columns.
+
+        Returns a Series if there is only one mean column, otherwise a DataFrame.
+
+        :param mean_columns: Columns to mean.
+        :param group_columns: Columns to group by.
+        """
+        return self._agg_by_group(
+            agg_name='mean',
+            agg_columns=mean_columns, group_columns=group_columns
         )
 
     # endregion
