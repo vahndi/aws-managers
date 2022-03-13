@@ -1,7 +1,7 @@
 from aws_managers.athena.functions.aggregate import CountMixin
 
 
-class Column(
+class ColumnQuery(
     CountMixin,
     object
 ):

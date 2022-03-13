@@ -1,16 +1,16 @@
-from aws_managers.athena.columns.column import Column
+from aws_managers.athena.queries.column_query import ColumnQuery
 from aws_managers.athena.functions.aggregate import AvgMixin, \
     GeometricMeanMixin, MaxMixin, MinMixin, SumMixin
 from aws_managers.athena.operators.comparisons import ScalarComparison
 
 
-class IntColumn(
+class IntegerColumnQuery(
     AvgMixin,
     GeometricMeanMixin,
     MaxMixin,
     MinMixin,
     SumMixin,
-    Column
+    ColumnQuery
 ):
 
     def __eq__(self, other: int) -> ScalarComparison:

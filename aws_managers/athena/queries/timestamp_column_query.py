@@ -1,12 +1,12 @@
-from aws_managers.athena.columns.column import Column
+from aws_managers.athena.queries.column_query import ColumnQuery
 from aws_managers.athena.functions.aggregate import MaxMixin, MinMixin
 from aws_managers.athena.operators.comparisons import TimestampComparison
 
 
-class TimestampColumn(
+class TimestampColumnQuery(
     MaxMixin,
     MinMixin,
-    Column
+    ColumnQuery
 ):
 
     @staticmethod

@@ -1,9 +1,9 @@
-from aws_managers.athena.columns.column import Column
+from aws_managers.athena.queries.column_query import ColumnQuery
 from aws_managers.athena.operators.comparisons import StringComparison
 
 
-class StringColumn(
-    Column
+class StringColumnQuery(
+    ColumnQuery
 ):
 
     def __eq__(self, other: int) -> StringComparison:

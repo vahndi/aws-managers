@@ -2,10 +2,10 @@ from typing import Dict, Optional, List, Union, Tuple
 
 from jinja2 import Environment, FileSystemLoader
 
-from aws_managers.athena.athena_ser_des import AthenaSerDes
+from aws_managers.athena.reference.athena_ser_des import AthenaSerDes
 from aws_managers.athena.clauses.conjunctive_operators import \
     ConjunctiveOperator
-from aws_managers.athena.columns import Column
+from aws_managers.athena.queries import ColumnQuery
 from aws_managers.athena.operators.mixins import ComparisonMixin
 from aws_managers.paths.dirs import DIR_ATHENA_TEMPLATES
 
@@ -78,8 +78,8 @@ class AthenaQueryGenerator(object):
         https://docs.aws.amazon.com/athena/latest/ug/querying-glue-catalog.html#querying-glue-catalog-listing-columns
 
         ['table_catalog', 'table_schema', 'table_name', 'column_name',
-       'ordinal_position', 'column_default', 'is_nullable', 'data_type',
-       'comment', 'extra_info']
+         'ordinal_position', 'column_default', 'is_nullable', 'data_type',
+         'comment', 'extra_info']
 
         :param database: Name of the database.
         :param table: Name of the table.
@@ -90,7 +90,7 @@ class AthenaQueryGenerator(object):
     def aggregate(
             self,
             agg_name: str,
-            columns: Union[str, Column, List[Union[str, Column]]],
+            columns: Union[str, ColumnQuery, List[Union[str, ColumnQuery]]],
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
@@ -107,7 +107,7 @@ class AthenaQueryGenerator(object):
                        integer percentage.
         :param where: Optional conditions to filter on.
         """
-        if isinstance(columns, str) or isinstance(columns, Column):
+        if isinstance(columns, str) or isinstance(columns, ColumnQuery):
             columns = [columns]
         t = self.env.get_template('dml/aggregate.jinja2')
         return t.render(
@@ -119,9 +119,47 @@ class AthenaQueryGenerator(object):
             where=where
         )
 
+    def aggregate_by_group(
+            self,
+            agg_name: str,
+            agg_columns: Union[str, List[str]],
+            group_columns: Union[str, List[str]],
+            database: str,
+            table: str,
+            sample: Optional[Tuple[str, int]] = None,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+    ) -> str:
+        """
+        Aggregate each column by group(s) using the given function
+        e.g. mean, max, min.
+
+        :param agg_name: Name of the aggregate function to apply to each column.
+        :param agg_columns: Column or columns to take the aggregate of.
+        :param group_columns: Column or columns to group by.
+        :param database: Name of the database.
+        :param table: Name of the table.
+        :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
+                       integer percentage.
+        :param where: Optional conditions to filter on.
+        """
+        if isinstance(agg_columns, str):
+            agg_columns = [agg_columns]
+        if isinstance(group_columns, str):
+            group_columns = [group_columns]
+        t = self.env.get_template('dml/aggregate_by_group.jinja2')
+        return t.render(
+            agg_name=agg_name,
+            database=database,
+            table=table,
+            sample=sample,
+            agg_columns=agg_columns,
+            group_columns=group_columns,
+            where=where
+        )
+
     def count_distinct(
             self,
-            columns: Union[str, Column, List[Union[str, Column]]],
+            columns: Union[str, ColumnQuery, List[Union[str, ColumnQuery]]],
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
@@ -138,7 +176,7 @@ class AthenaQueryGenerator(object):
         sample: Optional[Tuple[str, int]] = None,
         :param where: Optional conditions to filter on.
         """
-        if isinstance(columns, str) or isinstance(columns, Column):
+        if isinstance(columns, str) or isinstance(columns, ColumnQuery):
             columns = [columns]
         t = self.env.get_template('dml/count_distinct.jinja2')
         return t.render(
@@ -151,12 +189,12 @@ class AthenaQueryGenerator(object):
 
     def distinct(
             self,
-            column: Union[str, Column],
+            column: Union[str, ColumnQuery],
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
-            order_by: Optional[Union[Column, str, bool]] = True
+            order_by: Optional[Union[ColumnQuery, str, bool]] = True
     ) -> str:
         """
         Select distinct values from a column.
@@ -186,7 +224,7 @@ class AthenaQueryGenerator(object):
 
     def distinct_combinations(
             self,
-            columns: List[Union[str, Column]],
+            columns: List[Union[str, ColumnQuery]],
             database: str,
             table: str,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
@@ -209,7 +247,7 @@ class AthenaQueryGenerator(object):
 
     def histogram(
             self,
-            column: Union[str, Column],
+            column: Union[str, ColumnQuery],
             database: str,
             table: str,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
@@ -235,7 +273,7 @@ class AthenaQueryGenerator(object):
 
     def numeric_histogram(
             self,
-            column: Union[str, Column],
+            column: Union[str, ColumnQuery],
             buckets: int,
             database: str,
             table: str,

@@ -3,10 +3,12 @@ from typing import Optional, Union, List, Tuple
 from awswrangler.athena import read_sql_query
 from pandas import DataFrame, Index, Series
 
-from aws_managers.athena.athena_data_types import ATHENA_BOOLEAN_TYPES, \
+from aws_managers.athena.queries.athena_column_query_set import \
+    AthenaColumnQuerySet
+from aws_managers.athena.reference.athena_data_types import ATHENA_BOOLEAN_TYPES, \
     ATHENA_INTEGER_TYPES, ATHENA_REAL_TYPES, ATHENA_DATETIME_TYPES, \
     ATHENA_CHARACTER_TYPES, ATHENA_NUMERIC_TYPES
-from aws_managers.athena.athena_query_generator import AthenaQueryGenerator
+from aws_managers.athena.queries.athena_query_generator import AthenaQueryGenerator
 from aws_managers.athena.athena_series import AthenaSeries
 from aws_managers.athena.clauses.conjunctive_operators import \
     ConjunctiveOperator
@@ -44,6 +46,8 @@ class AthenaFrame(object):
                 sql=self._q.column_info(
                     database=self._database, table=self._table)
             )
+        self.column_query_set = AthenaColumnQuerySet(
+            column_info=self._column_info)
         self._sample: Optional[Tuple[str, int]] = sample
         self._where = where
 
@@ -248,6 +252,55 @@ class AthenaFrame(object):
         Return the sum of the values.
         """
         return self._agg('sum')
+
+    # endregion
+
+    # region aggregate by group
+
+    def _agg_by_group(
+            self,
+            agg_name: str,
+            sum_columns: Union[str, List[str]],
+            group_columns: Union[str, List[str]]
+    ):
+        """
+        Aggregate one or more columns over grouping of one or more other
+        columns.
+
+        Returns a Series if there is only one sum column, otherwise a DataFrame.
+
+        :param agg_name: Name of aggregation function.
+        :param sum_columns: Columns to sum.
+        :param group_columns: Columns to group by.
+        """
+        data = self._execute(sql=self._q.aggregate_by_group(
+            agg_name=agg_name,
+            agg_columns=sum_columns,
+            group_columns=group_columns,
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where
+        ))
+        return data.set_index(sum_columns)[sum_columns]
+
+    def sum_by_group(
+            self,
+            sum_columns: Union[str, List[str]],
+            group_columns: Union[str, List[str]]
+    ) -> Union[DataFrame, Series]:
+        """
+        Sum one or more columns over grouping of one or more other columns.
+
+        Returns a Series if there is only one sum column, otherwise a DataFrame.
+
+        :param sum_columns: Columns to sum.
+        :param group_columns: Columns to group by.
+        """
+        return self._agg_by_group(
+            agg_name='sum',
+            sum_columns=sum_columns, group_columns=group_columns
+        )
 
     # endregion
 
