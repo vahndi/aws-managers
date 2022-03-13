@@ -282,7 +282,7 @@ class AthenaFrame(object):
             sample=self._sample,
             where=self._where
         ))
-        return data.set_index(sum_columns)[sum_columns]
+        return data.set_index(group_columns)[sum_columns]
 
     def sum_by_group(
             self,
