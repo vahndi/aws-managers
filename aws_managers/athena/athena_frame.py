@@ -313,7 +313,7 @@ class AthenaFrame(object):
 
         Returns a Series if there is only one min column, otherwise a DataFrame.
 
-        :param min_columns: Columns to min.
+        :param min_columns: Columns to take min of.
         :param group_columns: Columns to group by.
         """
         return self._agg_by_group(
@@ -332,7 +332,7 @@ class AthenaFrame(object):
 
         Returns a Series if there is only one max column, otherwise a DataFrame.
 
-        :param max_columns: Columns to max.
+        :param max_columns: Columns to take max of.
         :param group_columns: Columns to group by.
         """
         return self._agg_by_group(
@@ -351,11 +351,11 @@ class AthenaFrame(object):
 
         Returns a Series if there is only one mean column, otherwise a DataFrame.
 
-        :param mean_columns: Columns to mean.
+        :param mean_columns: Columns to take mean of.
         :param group_columns: Columns to group by.
         """
         return self._agg_by_group(
-            agg_name='mean',
+            agg_name='avg',
             agg_columns=mean_columns, group_columns=group_columns
         )
 
