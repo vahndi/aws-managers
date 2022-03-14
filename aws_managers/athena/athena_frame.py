@@ -5,10 +5,11 @@ from pandas import DataFrame, Index, Series
 
 from aws_managers.athena.queries.athena_column_query_set import \
     AthenaColumnQuerySet
-from aws_managers.athena.reference.athena_data_types import ATHENA_BOOLEAN_TYPES, \
-    ATHENA_INTEGER_TYPES, ATHENA_REAL_TYPES, ATHENA_DATETIME_TYPES, \
-    ATHENA_CHARACTER_TYPES, ATHENA_NUMERIC_TYPES
-from aws_managers.athena.queries.athena_query_generator import AthenaQueryGenerator
+from aws_managers.athena.reference.athena_data_types import \
+    ATHENA_BOOLEAN_TYPES, ATHENA_CHARACTER_TYPES, ATHENA_DATETIME_TYPES, \
+    ATHENA_INTEGER_TYPES, ATHENA_NUMERIC_TYPES, ATHENA_REAL_TYPES
+from aws_managers.athena.queries.athena_query_generator import \
+    AthenaQueryGenerator
 from aws_managers.athena.athena_series import AthenaSeries
 from aws_managers.athena.clauses.conjunctive_operators import \
     ConjunctiveOperator
@@ -253,10 +254,6 @@ class AthenaFrame(object):
         """
         return self._agg('sum')
 
-    # endregion
-
-    # region aggregate by group
-
     def _agg_by_group(
             self,
             agg_name: str,
@@ -339,7 +336,7 @@ class AthenaFrame(object):
             agg_name='max',
             agg_columns=max_columns, group_columns=group_columns
         )
-    
+
     def mean_by_group(
             self,
             mean_columns: Union[str, List[str]],
@@ -358,6 +355,59 @@ class AthenaFrame(object):
             agg_name='avg',
             agg_columns=mean_columns, group_columns=group_columns
         )
+
+    # endregion
+
+    # region approximate aggregate functions
+
+    def approx_percentile(
+            self,
+            columns: Union[str, List[str]],
+            percentile: float
+    ):
+        """
+        Returns the approximate percentile for all input values of the column at
+        the given percentage. The value of percentage must be between zero and
+        one and must be constant for all input rows.
+
+        :param columns: Columns to find percentile of.
+        :param percentile: Percentile value to find.
+        """
+        data = self._execute(sql=self._q.approx_percentile(
+            columns=columns,
+            percentile=percentile,
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where
+        ))
+        return data
+
+    def approx_percentile_by_group(
+            self,
+            percentile_columns: Union[str, List[str]],
+            group_columns: Union[str, List[str]],
+            percentile: float
+    ):
+        """
+        Returns the approximate percentile for all input values of the column at
+        the given percentage. The value of percentage must be between zero and
+        one and must be constant for all input rows.
+
+        :param percentile_columns: Columns to find percentile of.
+        :param group_columns: Columns to find percentile of.
+        :param percentile: Percentile value to find.
+        """
+        data = self._execute(sql=self._q.approx_percentile_by_group(
+            percentile_columns=percentile_columns,
+            group_columns=group_columns,
+            percentile=percentile,
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where
+        ))
+        return data
 
     # endregion
 

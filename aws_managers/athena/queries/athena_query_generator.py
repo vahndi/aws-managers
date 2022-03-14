@@ -278,7 +278,7 @@ class AthenaQueryGenerator(object):
             database: str,
             table: str,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
-    ):
+    ) -> str:
         """
         Computes an approximate histogram with up to buckets number of buckets
         for all values. This function is equivalent to the variant of
@@ -300,5 +300,88 @@ class AthenaQueryGenerator(object):
             table=table,
             column=column,
             buckets=buckets,
+            where=where
+        )
+
+    def approx_percentile(
+            self,
+            columns: Union[str, ColumnQuery, List[Union[str, ColumnQuery]]],
+            percentile: float,
+            database: str,
+            table: str,
+            sample: Optional[Tuple[str, int]] = None,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+    ):
+        """
+        Returns the approximate percentile for all input values of the column at
+        the given percentage. The value of percentage must be between zero and
+        one and must be constant for all input rows.
+
+        :param columns: Name of the column(s) to find percentiles of.
+        :param percentile: Value of the percentile to calculate.
+        :param database: Name of the database.
+        :param table: Name of the table.
+        :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
+                       integer percentage.
+        :param where: Optional conditions to filter on.
+        """
+        if isinstance(columns, str) or isinstance(columns, ColumnQuery):
+            columns = [columns]
+        t = self.env.get_template('dml/approx_percentile.jinja2')
+        return t.render(
+            columns=columns,
+            percentile=percentile,
+            database=database,
+            table=table,
+            sample=sample,
+            where=where
+        )
+
+    def approx_percentile_by_group(
+            self,
+            percentile_columns: Union[
+                str, ColumnQuery, List[Union[str, ColumnQuery]]
+            ],
+            percentile: float,
+            group_columns: Union[
+                str, ColumnQuery, List[Union[str, ColumnQuery]]
+            ],
+            database: str,
+            table: str,
+            sample: Optional[Tuple[str, int]] = None,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+    ):
+        """
+        Returns the approximate percentile for all input values of the column at
+        the given percentage for each group. The value of percentage must be
+        between zero and one and must be constant for all input rows.
+
+        :param percentile_columns: Name of the column(s) to find percentiles of.
+        :param percentile: Value of the percentile to calculate.
+        :param group_columns: Column or columns to group by.
+        :param database: Name of the database.
+        :param table: Name of the table.
+        :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
+                       integer percentage.
+        :param where: Optional conditions to filter on.
+        """
+        if (
+                isinstance(percentile_columns, str) or
+                isinstance(percentile_columns, ColumnQuery)
+        ):
+            percentile_columns = [percentile_columns]
+        if (
+                isinstance(group_columns, str) or
+                isinstance(group_columns, ColumnQuery)
+        ):
+            group_columns = [group_columns]
+        t = self.env.get_template('dml/approx_percentile_by_group.jinja2')
+        return t.render(
+            percentile_columns=percentile_columns,
+            group_columns=group_columns,
+            percentile=percentile,
+            database=database,
+            table=table,
+            sample=sample,
             where=where
         )
