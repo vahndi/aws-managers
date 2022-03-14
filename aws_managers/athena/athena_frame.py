@@ -407,7 +407,7 @@ class AthenaFrame(object):
             sample=self._sample,
             where=self._where
         ))
-        return data
+        return data.set_index(group_columns)[percentile_columns]
 
     # endregion
 
