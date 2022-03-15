@@ -12,7 +12,7 @@ from aws_managers.athena.queries.athena_query_generator import \
     AthenaQueryGenerator
 from aws_managers.athena.athena_series import AthenaSeries
 from aws_managers.athena.clauses.conjunctive_operators import \
-    ConjunctiveOperator
+    ConjunctiveOperator, And
 from aws_managers.athena.operators.mixins import ComparisonMixin
 
 
@@ -353,7 +353,8 @@ class AthenaFrame(object):
         """
         return self._agg_by_group(
             agg_name='avg',
-            agg_columns=mean_columns, group_columns=group_columns
+            agg_columns=mean_columns,
+            group_columns=group_columns
         )
 
     # endregion
@@ -410,6 +411,28 @@ class AthenaFrame(object):
         return data.set_index(group_columns)[percentile_columns]
 
     # endregion
+
+    def where(
+            self,
+            conditions: Union[ComparisonMixin, ConjunctiveOperator]
+    ) -> 'AthenaFrame':
+        """
+        Return a new AthenaFrame matching the given condition(s).
+
+        :param conditions: Column comparison or conjunction of column
+        comparisons.
+        """
+        if self._where is not None:
+            where = And([self._where, conditions])
+        else:
+            where = conditions
+        return AthenaFrame(
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=where,
+            column_info=self._column_info
+        )
 
     def __getitem__(self, item: Union[str, List[str]]):
         """
