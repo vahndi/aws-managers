@@ -22,4 +22,8 @@ ORDER BY
 {%- for column in group_columns %}
     {{ column }}{{ ',' if not loop.last else '' }}
 {%- endfor %}
+{%- if limit is not none  %}
+LIMIT
+    {{ limit }}
+{%- endif %}
 ;

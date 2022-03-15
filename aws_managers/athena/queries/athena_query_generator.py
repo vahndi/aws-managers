@@ -87,6 +87,38 @@ class AthenaQueryGenerator(object):
         t = self.env.get_template('ddl/column_info.jinja2')
         return t.render(database=database, table=table)
 
+    def select(
+            self,
+            columns: Union[str, ColumnQuery, List[Union[str, ColumnQuery]]],
+            database: str,
+            table: str,
+            sample: Optional[Tuple[str, int]] = None,
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
+    ):
+        """
+        Select one or more columns from the table.
+
+        :param columns: Column or columns to select.
+        :param database: Name of the database.
+        :param table: Name of the table.
+        :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
+                       integer percentage.
+        :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
+        """
+        if isinstance(columns, str) or isinstance(columns, ColumnQuery):
+            columns = [columns]
+        t = self.env.get_template('dml/select.jinja2')
+        return t.render(
+            database=database,
+            table=table,
+            sample=sample,
+            columns=columns,
+            where=where,
+            limit=limit
+        )
+
     def aggregate(
             self,
             agg_name: str,
@@ -94,7 +126,8 @@ class AthenaQueryGenerator(object):
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ):
         """
         Aggregate each column using the given function e.g. mean, max, min.
@@ -106,6 +139,7 @@ class AthenaQueryGenerator(object):
         :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
                        integer percentage.
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         if isinstance(columns, str) or isinstance(columns, ColumnQuery):
             columns = [columns]
@@ -116,7 +150,8 @@ class AthenaQueryGenerator(object):
             table=table,
             sample=sample,
             columns=columns,
-            where=where
+            where=where,
+            limit=limit
         )
 
     def aggregate_by_group(
@@ -127,7 +162,8 @@ class AthenaQueryGenerator(object):
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ) -> str:
         """
         Aggregate each column by group(s) using the given function
@@ -141,6 +177,7 @@ class AthenaQueryGenerator(object):
         :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
                        integer percentage.
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         if isinstance(agg_columns, str):
             agg_columns = [agg_columns]
@@ -154,7 +191,8 @@ class AthenaQueryGenerator(object):
             sample=sample,
             agg_columns=agg_columns,
             group_columns=group_columns,
-            where=where
+            where=where,
+            limit=limit
         )
 
     def count_distinct(
@@ -163,7 +201,8 @@ class AthenaQueryGenerator(object):
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ) -> str:
         """
         Count the number of distinct values in each column.
@@ -175,6 +214,7 @@ class AthenaQueryGenerator(object):
                        integer percentage.
         sample: Optional[Tuple[str, int]] = None,
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         if isinstance(columns, str) or isinstance(columns, ColumnQuery):
             columns = [columns]
@@ -184,7 +224,8 @@ class AthenaQueryGenerator(object):
             table=table,
             sample=sample,
             columns=columns,
-            where=where
+            where=where,
+            limit=limit
         )
 
     def distinct(
@@ -194,7 +235,8 @@ class AthenaQueryGenerator(object):
             table: str,
             sample: Optional[Tuple[str, int]] = None,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
-            order_by: Optional[Union[ColumnQuery, str, bool]] = True
+            order_by: Optional[Union[ColumnQuery, str, bool]] = True,
+            limit: Optional[int] = None
     ) -> str:
         """
         Select distinct values from a column.
@@ -207,6 +249,7 @@ class AthenaQueryGenerator(object):
         :param where: Optional conditions to filter on.
         :param order_by: Name of column to order by, True to order by distinct
                          column or False to not specify order.
+        :param limit: Optional limit for number of rows to return.
         """
         t = self.env.get_template('dml/distinct.jinja2')
         if order_by is True:
@@ -219,7 +262,8 @@ class AthenaQueryGenerator(object):
             sample=sample,
             column=column,
             where=where,
-            order_by=order_by
+            order_by=order_by,
+            limit=limit
         )
 
     def distinct_combinations(
@@ -227,7 +271,8 @@ class AthenaQueryGenerator(object):
             columns: List[Union[str, ColumnQuery]],
             database: str,
             table: str,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ) -> str:
         """
         Select distinct combinations of values from more than one column.
@@ -236,13 +281,15 @@ class AthenaQueryGenerator(object):
         :param database: Name of the database.
         :param table: Name of the table.
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         t = self.env.get_template('dml/distinct_combinations.jinja2')
         return t.render(
             database=database,
             table=table,
             columns=columns,
-            where=where
+            where=where,
+            limit=limit
         )
 
     def histogram(
@@ -250,7 +297,8 @@ class AthenaQueryGenerator(object):
             column: Union[str, ColumnQuery],
             database: str,
             table: str,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ) -> str:
         """
         Returns a map containing the count of the number of times each input
@@ -262,13 +310,15 @@ class AthenaQueryGenerator(object):
         :param database: Name of the database.
         :param table: Name of the table.
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         t = self.env.get_template('dml/histogram.jinja2')
         return t.render(
             database=database,
             table=table,
             column=column,
-            where=where
+            where=where,
+            limit=limit
         )
 
     def numeric_histogram(
@@ -277,7 +327,8 @@ class AthenaQueryGenerator(object):
             buckets: int,
             database: str,
             table: str,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ) -> str:
         """
         Computes an approximate histogram with up to buckets number of buckets
@@ -293,6 +344,7 @@ class AthenaQueryGenerator(object):
         :param database: Name of the database.
         :param table: Name of the table.
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         t = self.env.get_template('dml/numeric_histogram.jinja2')
         return t.render(
@@ -300,7 +352,8 @@ class AthenaQueryGenerator(object):
             table=table,
             column=column,
             buckets=buckets,
-            where=where
+            where=where,
+            limit=limit
         )
 
     def approx_percentile(
@@ -310,7 +363,8 @@ class AthenaQueryGenerator(object):
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ):
         """
         Returns the approximate percentile for all input values of the column at
@@ -324,6 +378,7 @@ class AthenaQueryGenerator(object):
         :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
                        integer percentage.
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         if isinstance(columns, str) or isinstance(columns, ColumnQuery):
             columns = [columns]
@@ -334,7 +389,8 @@ class AthenaQueryGenerator(object):
             database=database,
             table=table,
             sample=sample,
-            where=where
+            where=where,
+            limit=limit
         )
 
     def approx_percentile_by_group(
@@ -349,7 +405,8 @@ class AthenaQueryGenerator(object):
             database: str,
             table: str,
             sample: Optional[Tuple[str, int]] = None,
-            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None
+            where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: Optional[int] = None
     ):
         """
         Returns the approximate percentile for all input values of the column at
@@ -364,6 +421,7 @@ class AthenaQueryGenerator(object):
         :param sample: Optional mapping of 'BERNOULLI' or 'SYSTEM' to an
                        integer percentage.
         :param where: Optional conditions to filter on.
+        :param limit: Optional limit for number of rows to return.
         """
         if (
                 isinstance(percentile_columns, str) or
@@ -383,5 +441,6 @@ class AthenaQueryGenerator(object):
             database=database,
             table=table,
             sample=sample,
-            where=where
+            where=where,
+            limit=limit
         )

@@ -15,4 +15,8 @@ FROM (
     WHERE {{ where | replace('\n', '\n    ')}}
 {%- endif %}
 )
+{%- if limit is not none  %}
+LIMIT
+    {{ limit }}
+{%- endif %}
 ;

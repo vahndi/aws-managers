@@ -1,6 +1,6 @@
 SELECT
 {%- for column in columns %}
-    approx_percentile({{ column }}, {{ percentile }}) as {{ column }}{{ ',' if not loop.last else '' }}
+    {{ column }}{{',' if not loop.last else '' }}
 {%- endfor %}
 FROM
     {{ database }}.{{ table }}

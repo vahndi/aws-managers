@@ -24,6 +24,7 @@ class AthenaFrame(object):
             table: str,
             sample: Optional[Tuple[str, int]] = None,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
+            limit: int = None,
             column_info: Optional[DataFrame] = None
     ):
         """
@@ -51,6 +52,7 @@ class AthenaFrame(object):
             column_info=self._column_info)
         self._sample: Optional[Tuple[str, int]] = sample
         self._where = where
+        self._limit = limit
 
     def _execute(self, sql: str) -> DataFrame:
         """
@@ -60,6 +62,16 @@ class AthenaFrame(object):
         """
         data = read_sql_query(sql=sql, database=self._database)
         return data
+
+    @property
+    def _execution_kwargs(self) -> dict:
+        return dict(
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where,
+            limit=self._limit
+        )
 
     @property
     def columns(self) -> Index:
@@ -77,6 +89,22 @@ class AthenaFrame(object):
 
     # region sampling
 
+    def sample(self, n: int) -> DataFrame:
+        """
+        Sample n rows from the table.
+
+        :param n: Number of rows to sample.
+        """
+        data = self._execute(sql=self._q.select(
+            columns='*',
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where,
+            limit=n
+        ))
+        return data
+
     def bernoulli_sample(self, percentage: int) -> 'AthenaFrame':
         """
         Do sampling from the Frame using the Bernoulli method.
@@ -86,6 +114,7 @@ class AthenaFrame(object):
             table=self._table,
             sample=('BERNOULLI', percentage),
             where=self._where,
+            limit=self._limit,
             column_info=self._column_info,
         )
 
@@ -98,6 +127,7 @@ class AthenaFrame(object):
             table=self._table,
             sample=('SYSTEM', percentage),
             where=self._where,
+            limit=self._limit,
             column_info=self._column_info
         )
 
@@ -139,6 +169,7 @@ class AthenaFrame(object):
             table=self._table,
             sample=self._sample,
             where=self._where,
+            limit=self._limit,
             column_info=column_info
         )
 
@@ -193,10 +224,7 @@ class AthenaFrame(object):
         """
         data = self._execute(self._q.count_distinct(
             columns=self.columns.to_list(),
-            database=self._database,
-            table=self._table,
-            sample=self._sample,
-            where=self._where
+            **self._execution_kwargs
         ))
         return data.iloc[0]
 
@@ -211,10 +239,7 @@ class AthenaFrame(object):
         data = self._execute(self._q.aggregate(
             agg_name=agg_name,
             columns=self.columns.to_list(),
-            database=self._database,
-            table=self._table,
-            sample=self._sample,
-            where=self._where
+            **self._execution_kwargs
         ))
         return data.iloc[0]
 
@@ -274,10 +299,7 @@ class AthenaFrame(object):
             agg_name=agg_name,
             agg_columns=agg_columns,
             group_columns=group_columns,
-            database=self._database,
-            table=self._table,
-            sample=self._sample,
-            where=self._where
+            **self._execution_kwargs
         ))
         return data.set_index(group_columns)[agg_columns]
 
@@ -296,7 +318,8 @@ class AthenaFrame(object):
         """
         return self._agg_by_group(
             agg_name='sum',
-            agg_columns=sum_columns, group_columns=group_columns
+            agg_columns=sum_columns,
+            group_columns=group_columns
         )
 
     def min_by_group(
@@ -315,7 +338,8 @@ class AthenaFrame(object):
         """
         return self._agg_by_group(
             agg_name='min',
-            agg_columns=min_columns, group_columns=group_columns
+            agg_columns=min_columns,
+            group_columns=group_columns
         )
 
     def max_by_group(
@@ -334,7 +358,8 @@ class AthenaFrame(object):
         """
         return self._agg_by_group(
             agg_name='max',
-            agg_columns=max_columns, group_columns=group_columns
+            agg_columns=max_columns,
+            group_columns=group_columns
         )
 
     def mean_by_group(
@@ -377,10 +402,7 @@ class AthenaFrame(object):
         data = self._execute(sql=self._q.approx_percentile(
             columns=columns,
             percentile=percentile,
-            database=self._database,
-            table=self._table,
-            sample=self._sample,
-            where=self._where
+            **self._execution_kwargs
         ))
         return data
 
@@ -403,10 +425,7 @@ class AthenaFrame(object):
             percentile_columns=percentile_columns,
             group_columns=group_columns,
             percentile=percentile,
-            database=self._database,
-            table=self._table,
-            sample=self._sample,
-            where=self._where
+            **self._execution_kwargs
         ))
         return data.set_index(group_columns)[percentile_columns]
 
@@ -431,6 +450,22 @@ class AthenaFrame(object):
             table=self._table,
             sample=self._sample,
             where=where,
+            limit=self._limit,
+            column_info=self._column_info
+        )
+
+    def limit(self, n: int) -> 'AthenaFrame':
+        """
+        Return a new AthenaFrame with a limit clause.
+
+        :param n: number of rows to limit output to.
+        """
+        return AthenaFrame(
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where,
+            limit=n,
             column_info=self._column_info
         )
 
@@ -457,6 +492,7 @@ class AthenaFrame(object):
                 table=self._table,
                 sample=self._sample,
                 where=self._where,
+                limit=self._limit,
                 column_info=self._column_info.loc[
                     self._column_info['column_name'].isin(item)
                 ]

@@ -13,4 +13,8 @@ WHERE {{ where }}
 ORDER BY
     {{ order_by }}
 {%- endif  %}
+{%- if limit is not none  %}
+LIMIT
+    {{ limit }}
+{%- endif %}
 ;
