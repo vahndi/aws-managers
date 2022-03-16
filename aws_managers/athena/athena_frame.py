@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List, Tuple, Dict, Any
 
 from awswrangler.athena import read_sql_query
 from pandas import DataFrame, Index, Series
@@ -24,7 +24,7 @@ class AthenaFrame(object):
             table: str,
             sample: Optional[Tuple[str, int]] = None,
             where: Optional[Union[ComparisonMixin, ConjunctiveOperator]] = None,
-            limit: int = None,
+            limit: Optional[int] = None,
             column_info: Optional[DataFrame] = None
     ):
         """
@@ -51,8 +51,51 @@ class AthenaFrame(object):
         self.column_query_set = AthenaColumnQuerySet(
             column_info=self._column_info)
         self._sample: Optional[Tuple[str, int]] = sample
-        self._where = where
-        self._limit = limit
+        self._where: Optional[Union[
+            ComparisonMixin, ConjunctiveOperator
+        ]] = where
+        self._limit: Optional[int] = limit
+
+    # region metadata
+
+    @property
+    def database(self) -> str:
+        return self._database
+
+    @property
+    def table(self) -> str:
+        return self._table
+
+    @property
+    def meta(self) -> Dict[str, Any]:
+        """
+        Return a dict containing info on the table and any query clauses.
+        """
+        return dict(
+            database=self._database,
+            table=self._table,
+            sample=self._sample,
+            where=self._where,
+            limit=self._limit,
+        )
+
+    @property
+    def columns(self) -> Index:
+        """
+        The column labels of the table.
+        """
+        return Index(self._column_info['column_name'].to_list())
+
+    @property
+    def data_types(self) -> Series:
+        """
+        Return the data-types in the table.
+        """
+        return self._column_info.set_index('column_name')['data_type']
+
+    # endregion
+
+    # region query execution
 
     def _execute(self, sql: str) -> DataFrame:
         """
@@ -73,19 +116,7 @@ class AthenaFrame(object):
             limit=self._limit
         )
 
-    @property
-    def columns(self) -> Index:
-        """
-        The column labels of the table.
-        """
-        return Index(self._column_info['column_name'].to_list())
-
-    @property
-    def data_types(self) -> Series:
-        """
-        Return the data-types in the table.
-        """
-        return self._column_info.set_index('column_name')['data_type']
+    # endregion
 
     # region sampling
 
