@@ -3,7 +3,8 @@ from typing import Optional, Tuple, Union
 from awswrangler.athena import read_sql_query
 from pandas import Series, DataFrame
 
-from aws_managers.athena.queries.athena_query_generator import AthenaQueryGenerator
+from aws_managers.athena.queries.athena_query_generator import \
+    AthenaQueryGenerator
 from aws_managers.athena.clauses.conjunctive_operators import \
     ConjunctiveOperator
 from aws_managers.athena.operators.mixins import ComparisonMixin

@@ -1,8 +1,10 @@
 from aws_managers.athena.functions.aggregate import CountMixin
+from aws_managers.athena.functions.window import LagMixin
 
 
 class ColumnQuery(
     CountMixin,
+    LagMixin,
     object
 ):
 

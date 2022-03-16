@@ -3,6 +3,7 @@ from typing import Optional, Union, List, Tuple, Dict, Any
 from awswrangler.athena import read_sql_query
 from pandas import DataFrame, Index, Series
 
+from aws_managers.athena.queries import ColumnQuery
 from aws_managers.athena.queries.athena_column_query_set import \
     AthenaColumnQuerySet
 from aws_managers.athena.reference.athena_data_types import \
@@ -117,6 +118,19 @@ class AthenaFrame(object):
         )
 
     # endregion
+
+    def select(
+            self,
+            columns: Union[str, ColumnQuery, List[str], List[ColumnQuery]]
+    ):
+        """
+        Do a basic selection using columns or column queries.
+        """
+        data = self._execute(sql=self._q.select(
+            columns=columns,
+            **self._execution_kwargs
+        ))
+        return data
 
     # region sampling
 
